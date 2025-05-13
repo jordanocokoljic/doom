@@ -2,6 +2,7 @@ package doom
 
 import (
 	"io"
+	"strings"
 
 	"golang.org/x/net/html"
 )
@@ -36,6 +37,29 @@ func (n *Node) Attribute(name string) (string, bool) {
 	}
 
 	return "", false
+}
+
+// Text returns the combined text content of all the Node and all of its
+// children. The text is not trimmed, any whitespace in the markup (such as
+// indentation or newlines) will be reflected in the returned value.
+func (n *Node) Text() string {
+	var (
+		sb   strings.Builder
+		walk func(node *html.Node)
+	)
+
+	walk = func(node *html.Node) {
+		if node.Type == html.TextNode {
+			sb.WriteString(node.Data)
+		}
+
+		for c := node.FirstChild; c != nil; c = c.NextSibling {
+			walk(c)
+		}
+	}
+
+	walk((*html.Node)(n))
+	return sb.String()
 }
 
 // Find will return the first child of the calling Node that matches all the
